@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Pilihan Ganda</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --ink:#1B2A4A;
+    --ink-2:#243863;
+    --paper:#FAF7F0;
+    --paper-2:#F1ECDF;
+    --gold:#C9A227;
+    --teal:#3D7068;
+    --coral:#B4483C;
+    --text:#232323;
+    --text-soft:#5B5B52;
+    --line:#DAD3C0;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--ink);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(201,162,39,0.10), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(61,112,104,0.18), transparent 45%);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 32px 16px;
+  }
+  .app{
+    width:100%;
+    max-width: 640px;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+    overflow:hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  header.top{
+    background: var(--ink-2);
+    color: var(--paper);
+    padding: 22px 26px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap: 12px;
+  }
+  header.top h1{
+    font-family:'Lora', serif;
+    font-weight:600;
+    font-size: 1.35rem;
+    margin:0;
+    letter-spacing: 0.01em;
+  }
+  header.top .tag{
+    font-size: 0.78rem;
+    color: rgba(250,247,240,0.65);
+  }
+  .body-pad{ padding: 26px; }
+
+  /* ---- HOME ---- */
+  .home p.lede{
+    font-family:'Lora', serif;
+    font-size: 1.05rem;
+    line-height:1.6;
+    color: var(--text);
+    margin: 0 0 22px;
+  }
+  .stat-row{
+    display:flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .stat{
+    flex:1; min-width: 120px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .stat .num{ font-family:'Lora',serif; font-size:1.5rem; font-weight:700; color: var(--ink-2);}
+  .stat .label{ font-size:0.8rem; color: var(--text-soft); margin-top: 2px;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size: 0.95rem;
+    cursor:pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn:active{ transform: scale(0.98); }
+  .btn-primary{ background: var(--ink-2); color: var(--paper); }
+  .btn-primary:hover{ box-shadow: 0 6px 16px -4px rgba(36,56,99,0.5); }
+  .btn-ghost{ background: transparent; color: var(--ink-2); border: 1.5px solid var(--ink-2); }
+  .btn-ghost:hover{ background: rgba(36,56,99,0.06); }
+  .btn-danger{ background: transparent; color: var(--coral); border: 1.5px solid var(--coral); padding: 8px 14px; font-size:0.85rem;}
+  .btn-row{ display:flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ---- QUIZ ---- */
+  .progress-wrap{
+    display:flex; align-items:center; gap: 12px; margin-bottom: 20px;
+  }
+  .progress-track{
+    flex:1; height: 6px; background: var(--paper-2); border-radius: 4px; overflow:hidden;
+  }
+  .progress-fill{
+    height:100%; background: var(--gold); border-radius:4px;
+    transition: width 0.35s ease;
+  }
+  .progress-num{ font-size:0.82rem; color: var(--text-soft); white-space:nowrap; }
+
+  .question-card{
+    font-family:'Lora', serif;
+    font-size: 1.18rem;
+    line-height:1.55;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .options{ display:flex; flex-direction:column; gap: 10px; margin-bottom: 22px; }
+  .option{
+    display:flex; align-items:flex-start; gap: 12px;
+    text-align:left;
+    padding: 13px 15px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: #fff;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+    font-size: 0.96rem;
+    color: var(--text);
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .option:hover:not(.locked){ border-color: var(--ink-2); }
+  .option .letter{
+    font-weight:700; color: var(--ink-2); min-width: 20px;
+  }
+  .option.correct{ border-color: var(--teal); background: rgba(61,112,104,0.10); }
+  .option.correct .letter{ color: var(--teal); }
+  .option.wrong{ border-color: var(--coral); background: rgba(180,72,60,0.08); }
+  .option.wrong .letter{ color: var(--coral); }
+  .option.locked{ cursor:default; }
+  .option.dim{ opacity: 0.55; }
+
+  .feedback{
+    font-size: 0.92rem;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display:none;
+  }
+  .feedback.show{ display:block; }
+  .feedback.ok{ background: rgba(61,112,104,0.12); color: var(--teal); }
+  .feedback.no{ background: rgba(180,72,60,0.10); color: var(--coral); }
+
+  /* ---- RESULT ---- */
+  .score-hero{
+    text-align:center;
+    padding: 10px 0 26px;
+  }
+  .score-hero .big{
+    font-family:'Lora',serif; font-weight:700; font-size: 3rem; color: var(--ink-2);
+  }
+  .score-hero .of{ color: var(--text-soft); font-size:1rem; }
+  .score-hero .msg{ margin-top: 8px; font-family:'Lora',serif; font-style:italic; color: var(--text-soft);}
+  .score-row{
+    display:flex; justify-content:center; gap: 10px; margin-top: 16px; flex-wrap: wrap;
+  }
+  .score-pill{
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 16px;
+    display:flex; flex-direction:column; align-items:center; min-width: 78px;
+  }
+  .score-pill .label{ font-size: 0.72rem; color: var(--text-soft); }
+  .score-pill .value{ font-family:'Lora',serif; font-weight:700; font-size: 1.15rem; color: var(--ink-2); }
+
+  .review-item{
+    border-top: 1px solid var(--line);
+    padding: 14px 0;
+  }
+  .review-item .q{ font-weight:600; margin-bottom: 8px; }
+  .review-line{ font-size: 0.88rem; margin-bottom: 3px; display:flex; gap:6px;}
+  .review-line.correct{ color: var(--teal); }
+  .review-line.wrong{ color: var(--coral); }
+
+  /* ---- MANAGE ---- */
+  .qlist-item{
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    background: #fff;
+    display:flex; justify-content:space-between; align-items:flex-start; gap: 12px;
+  }
+  .qlist-item .q{ font-weight:600; font-size:0.95rem; margin-bottom:4px;}
+  .qlist-item .a{ font-size:0.83rem; color: var(--teal); }
+
+  .field{ margin-bottom: 14px; }
+  .field label{ display:block; font-size:0.83rem; font-weight:600; color: var(--text-soft); margin-bottom: 5px;}
+  .field input[type=text]{
+    width:100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--line);
+    font-family:'Inter',sans-serif; font-size:0.92rem;
+  }
+  .field input[type=text]:focus{ outline: none; border-color: var(--ink-2); }
+  .opt-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .radio-row{ display:flex; align-items:center; gap:6px; margin-top:5px;}
+  .hint{ font-size:0.78rem; color: var(--text-soft); margin-top:10px; }
+
+  .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+  .link-back{ background:none; border:none; color: var(--ink-2); font-weight:600; cursor:pointer; font-size:0.88rem; padding:0;}
+
+  .guru-badge{
+    display:flex; justify-content:space-between; align-items:center;
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 18px; font-size: 0.86rem; color: var(--text-soft);
+  }
+  .guru-badge strong{ color: var(--ink-2); }
+
+  .guru-list{ display:flex; flex-direction:column; gap: 8px; margin-bottom: 18px; }
+  .guru-item{
+    display:flex; justify-content:space-between; align-items:center;
+    background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius);
+    padding: 12px 14px; cursor:pointer; font-weight:600; font-size:0.92rem;
+    transition: border-color 0.15s ease;
+  }
+  .guru-item:hover{ border-color: var(--ink-2); }
+
+  .upload-box{
+    background: var(--paper-2);
+    border: 1.5px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 18px 18px 16px;
+  }
+  .upload-title{ font-family:'Lora',serif; font-weight:600; font-size: 1rem; margin-bottom: 4px; color: var(--ink-2); }
+  .upload-box input[type=file]{
+    font-family:'Inter',sans-serif; font-size: 0.85rem; margin-top: 8px;
+  }
+  .format-hint{
+    font-size: 0.78rem; color: var(--text-soft); background: #fff; border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px 14px; margin-top: 10px; line-height: 1.6;
+  }
+  .format-hint code{
+    background: var(--paper-2); padding: 1px 5px; border-radius: 4px; font-size: 0.76rem;
+  }
+
+  @media (max-width: 420px){
+    .opt-grid{ grid-template-columns: 1fr; }
+    .score-hero .big{ font-size: 2.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Kuis Pilihan Ganda</h1>
+    <div class="tag" id="headerTag">Uji pengetahuanmu</div>
+  </header>
+  <div class="body-pad" id="screen"></div>
+</div>
+
+<script>
+const DEFAULT_QUESTIONS = [
+  { q: "Ibu kota Indonesia terletak di pulau apa?", opts: ["Sumatra","Jawa","Kalimantan","Sulawesi"], correct: 1 },
+  { q: "Planet manakah yang dijuluki 'Planet Merah'?", opts: ["Venus","Jupiter","Mars","Saturnus"], correct: 2 },
+  { q: "Siapa proklamator kemerdekaan Indonesia bersama Mohammad Hatta?", opts: ["Soeharto","Soekarno","Sutan Sjahrir","Ki Hajar Dewantara"], correct: 1 },
+  { q: "Berapa hasil dari 12 x 8?", opts: ["86","96","106","92"], correct: 1 },
+  { q: "Samudra terluas di dunia adalah?", opts: ["Atlantik","Hindia","Arktik","Pasifik"], correct: 3 },
+  { q: "Candi Borobudur terletak di provinsi?", opts: ["Jawa Barat","Jawa Tengah","Jawa Timur","DI Yogyakarta"], correct: 1 },
+  { q: "Unsur kimia dengan simbol 'O' adalah?", opts: ["Emas","Oksigen","Perak","Osmium"], correct: 1 },
+  { q: "Hewan apa yang dikenal sebagai 'raja hutan'?", opts: ["Harimau","Gajah","Singa","Serigala"], correct: 2 },
+  { q: "Berapa jumlah provinsi di Indonesia saat ini (perkiraan umum)?", opts: ["27","34","38","40"], correct: 2 },
+  { q: "Bahasa resmi negara Brasil adalah?", opts: ["Spanyol","Portugis","Inggris","Prancis"], correct: 1 },
+  { q: "Siapa penemu bola lampu pijar?", opts: ["Nikola Tesla","Thomas Edison","Alexander Graham Bell","James Watt"], correct: 1 },
+  { q: "Gunung tertinggi di dunia adalah?", opts: ["K2","Kilimanjaro","Everest","Elbrus"], correct: 2 },
+  { q: "Berapa jumlah sisi pada bangun segi delapan (oktagon)?", opts: ["6","7","8","9"], correct: 2 },
+  { q: "Mata uang resmi Jepang adalah?", opts: ["Won","Yuan","Ringgit","Yen"], correct: 3 },
+  { q: "Organ tubuh manusia yang memompa darah adalah?", opts: ["Paru-paru","Jantung","Hati","Ginjal"], correct: 1 },
+  { q: "Benua terluas di dunia adalah?", opts: ["Afrika","Asia","Amerika Utara","Eropa"], correct: 1 },
+  { q: "Siapa penulis naskah proklamasi kemerdekaan Indonesia bersama Soekarno dan Hatta?", opts: ["Ahmad Soebardjo","Sutan Sjahrir","Tan Malaka","Wage Rudolf Soepratman"], correct: 0 },
+  { q: "Rumus kimia air adalah?", opts: ["CO2","H2O","O2","NaCl"], correct: 1 },
+  { q: "Tarian tradisional Bali yang menceritakan kisah Ramayana adalah?", opts: ["Tari Kecak","Tari Saman","Tari Piring","Tari Jaipong"], correct: 0 },
+  { q: "Berapa hasil dari akar kuadrat 144?", opts: ["10","11","12","13"], correct: 2 },
+  { q: "Presiden pertama Republik Indonesia adalah?", opts: ["Soeharto","Soekarno","BJ Habibie","Megawati"], correct: 1 },
+  { q: "Hewan mamalia terbesar di dunia adalah?", opts: ["Gajah Afrika","Paus Biru","Jerapah","Badak"], correct: 1 },
+  { q: "Ibu kota Australia adalah?", opts: ["Sydney","Melbourne","Canberra","Perth"], correct: 2 },
+  { q: "Lapisan atmosfer bumi yang melindungi dari sinar ultraviolet disebut?", opts: ["Troposfer","Stratosfer (lapisan ozon)","Mesosfer","Termosfer"], correct: 1 },
+  { q: "Berapa jumlah pemain dalam satu tim sepak bola di lapangan?", opts: ["9","10","11","12"], correct: 2 },
+  { q: "Penulis novel 'Laskar Pelangi' adalah?", opts: ["Pramoedya Ananta Toer","Andrea Hirata","Tere Liye","Ahmad Tohari"], correct: 1 },
+  { q: "Sungai terpanjang di dunia adalah?", opts: ["Sungai Amazon","Sungai Nil","Sungai Yangtze","Sungai Mississippi"], correct: 1 },
+  { q: "Berapa jumlah tulang pada tubuh manusia dewasa (perkiraan umum)?", opts: ["186","206","226","246"], correct: 1 },
+  { q: "Alat musik tradisional Jawa yang dimainkan dengan cara dipukul adalah?", opts: ["Angklung","Sasando","Gamelan","Kolintang"], correct: 2 },
+  { q: "Negara dengan penduduk terbanyak di dunia saat ini adalah?", opts: ["Tiongkok","India","Amerika Serikat","Indonesia"], correct: 1 },
+  { q: "Proses tumbuhan membuat makanan menggunakan cahaya matahari disebut?", opts: ["Respirasi","Fotosintesis","Transpirasi","Fermentasi"], correct: 1 },
+  { q: "Siapa penemu teori relativitas?", opts: ["Isaac Newton","Galileo Galilei","Albert Einstein","Stephen Hawking"], correct: 2 },
+  { q: "Danau terbesar di Indonesia adalah?", opts: ["Danau Toba","Danau Poso","Danau Sentani","Danau Maninjau"], correct: 0 },
+  { q: "Berapa hasil dari 15% dari 200?", opts: ["20","25","30","35"], correct: 2 },
+  { q: "Pahlawan wanita asal Aceh yang terkenal dalam Perang Aceh adalah?", opts: ["Cut Nyak Dhien","Dewi Sartika","RA Kartini","Martha Christina Tiahahu"], correct: 0 },
+  { q: "Warna bendera Indonesia adalah?", opts: ["Merah-Hijau","Merah-Putih","Putih-Biru","Kuning-Merah"], correct: 1 },
+  { q: "Planet terdekat dengan matahari adalah?", opts: ["Venus","Bumi","Merkurius","Mars"], correct: 2 },
+  { q: "Kota yang dijuluki 'Kota Kembang' di Indonesia adalah?", opts: ["Bandung","Surabaya","Semarang","Malang"], correct: 0 },
+  { q: "Satuan internasional untuk mengukur suhu adalah?", opts: ["Fahrenheit","Kelvin","Celsius","Reamur"], correct: 1 },
+  { q: "Kitab suci umat Hindu disebut?", opts: ["Tripitaka","Weda","Alkitab","Tao Te Ching"], correct: 1 },
+  { q: "Berapa jumlah huruf dalam abjad Latin (alfabet)?", opts: ["24","25","26","27"], correct: 2 },
+  { q: "Organisasi pergerakan nasional pertama di Indonesia adalah?", opts: ["Sarekat Islam","Budi Utomo","Indische Partij","Perhimpunan Indonesia"], correct: 1 },
+  { q: "Hewan apa yang termasuk reptil berdarah dingin dan bisa hidup di air maupun darat?", opts: ["Buaya","Lumba-lumba","Paus","Anjing laut"], correct: 0 },
+  { q: "Ibu kota Mesir adalah?", opts: ["Kairo","Alexandria","Giza","Luxor"], correct: 0 },
+  { q: "Zat yang dibutuhkan tumbuhan untuk fotosintesis selain air dan cahaya adalah?", opts: ["Nitrogen","Karbon dioksida","Oksigen murni","Metana"], correct: 1 },
+  { q: "Pencipta lagu 'Indonesia Raya' adalah?", opts: ["Ismail Marzuki","Wage Rudolf Soepratman","Cornel Simanjuntak","Gesang"], correct: 1 },
+  { q: "Berapa hasil dari 7 pangkat 2 (7²)?", opts: ["14","42","49","56"], correct: 2 },
+  { q: "Selat yang memisahkan Pulau Sumatra dan Pulau Jawa adalah?", opts: ["Selat Malaka","Selat Sunda","Selat Bali","Selat Karimata"], correct: 1 },
+  { q: "Jenis olahraga yang menggunakan istilah 'smash' dan 'net' adalah?", opts: ["Sepak bola","Bulu tangkis","Atletik","Renang"], correct: 1 }
+];
+
+let state = {
+  screen: "profile",
+  order: [],
+  current: 0,
+  answers: [],   // {selected, correct}
+  locked: false
+};
+
+const screenEl = document.getElementById("screen");
+const headerTag = document.getElementById("headerTag");
+
+const STORAGE_PREFIX = "kuisapp_v1_";
+let storageAvailable = true;
+let activeGuru = null;
+let questions = [];
+
+function testStorage(){
+  try{
+    const k = STORAGE_PREFIX + "__test__";
+    localStorage.setItem(k, "1");
+    localStorage.removeItem(k);
+    return true;
+  } catch(e){
+    return false;
+  }
+}
+
+function getGuruList(){
+  if(!storageAvailable) return [];
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_PREFIX + "guru_list") || "[]");
+  } catch(e){ return []; }
+}
+
+function saveGuruList(list){
+  if(!storageAvailable) return;
+  try{ localStorage.setItem(STORAGE_PREFIX + "guru_list", JSON.stringify(list)); }
+  catch(e){}
+}
+
+function loadQuestionsForGuru(name){
+  if(!storageAvailable) return DEFAULT_QUESTIONS.map(q => ({...q}));
+  try{
+    const raw = localStorage.getItem(STORAGE_PREFIX + "soal_" + name);
+    if(raw === null) return DEFAULT_QUESTIONS.map(q => ({...q}));
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : DEFAULT_QUESTIONS.map(q => ({...q}));
+  } catch(e){
+    return DEFAULT_QUESTIONS.map(q => ({...q}));
+  }
+}
+
+function persistQuestions(){
+  if(!storageAvailable || !activeGuru) return;
+  try{
+    localStorage.setItem(STORAGE_PREFIX + "soal_" + activeGuru, JSON.stringify(questions));
+  } catch(e){}
+}
+
+function chooseGuru(name){
+  name = name.trim();
+  if(!name) return;
+  activeGuru = name;
+  let list = getGuruList();
+  if(!list.includes(name)){
+    list.push(name);
+    saveGuruList(list);
+  }
+  if(storageAvailable){
+    try{ localStorage.setItem(STORAGE_PREFIX + "active_guru", name); } catch(e){}
+  }
+  questions = loadQuestionsForGuru(name);
+  state.screen = "home";
+  render();
+}
+
+function selectGuruFromInput(){
+  const val = document.getElementById("guruNameInput").value;
+  chooseGuru(val);
+}
+
+function switchGuru(){
+  state.screen = "profile";
+  render();
+}
+
+function deleteGuruProfile(name, evt){
+  if(evt) evt.stopPropagation();
+  if(!confirm(`Hapus profil "${name}" beserta seluruh soalnya? Tindakan ini tidak bisa dibatalkan.`)) return;
+  let list = getGuruList().filter(n => n !== name);
+  saveGuruList(list);
+  if(storageAvailable){
+    try{ localStorage.removeItem(STORAGE_PREFIX + "soal_" + name); } catch(e){}
+  }
+  if(activeGuru === name){
+    activeGuru = null;
+    if(storageAvailable){
+      try{ localStorage.removeItem(STORAGE_PREFIX + "active_guru"); } catch(e){}
+    }
+  }
+  render();
+}
+
+function letterOf(i){ return String.fromCharCode(65+i); }
+
+function shuffledIndices(n){
+  let arr = [...Array(n).keys()];
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startQuiz(){
+  if(questions.length === 0){
+    alert("Belum ada soal. Tambahkan soal dulu di menu Kelola Soal.");
+    return;
+  }
+  state.screen = "quiz";
+  state.order = shuffledIndices(questions.length);
+  state.current = 0;
+  state.answers = [];
+  state.locked = false;
+  render();
+}
+
+function selectOption(idx){
+  if(state.locked) return;
+  const qIdx = state.order[state.current];
+  const question = questions[qIdx];
+  const isCorrect = idx === question.correct;
+  state.answers.push({ qIdx, selected: idx, correct: isCorrect });
+  state.locked = true;
+  render();
+}
+
+function nextQuestion(){
+  if(state.current < state.order.length - 1){
+    state.current += 1;
+    state.locked = false;
+    render();
+  } else {
+    state.screen = "result";
+    render();
+  }
+}
+
+function restart(){
+  state.screen = "home";
+  render();
+}
+
+function goHome(){
+  state.screen = "home";
+  render();
+}
+
+function goManage(){
+  state.screen = "manage";
+  render();
+}
+
+function deleteQuestion(i){
+  questions.splice(i,1);
+  persistQuestions();
+  render();
+}
+
+function addQuestionFromForm(){
+  const qText = document.getElementById("newQ").value.trim();
+  const optEls = [0,1,2,3].map(i => document.getElementById("newOpt"+i));
+  const opts = optEls.map(el => el.value.trim());
+  const correctRadio = document.querySelector('input[name="newCorrect"]:checked');
+
+  if(!qText || opts.some(o => !o) || !correctRadio){
+    alert("Lengkapi pertanyaan, 4 opsi jawaban, dan tandai jawaban yang benar.");
+    return;
+  }
+  questions.push({ q: qText, opts: opts, correct: parseInt(correctRadio.value) });
+  persistQuestions();
+  render();
+}
+
+function parseCsvLine(line){
+  // parser CSV sederhana yang mendukung nilai berkutip ("...")
+  const result = [];
+  let cur = "";
+  let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(inQuotes){
+      if(ch === '"'){
+        if(line[i+1] === '"'){ cur += '"'; i++; }
+        else { inQuotes = false; }
+      } else { cur += ch; }
+    } else {
+      if(ch === '"'){ inQuotes = true; }
+      else if(ch === ','){ result.push(cur); cur = ""; }
+      else { cur += ch; }
+    }
+  }
+  result.push(cur);
+  return result.map(s => s.trim());
+}
+
+function letterToIndex(val){
+  const v = String(val).trim().toUpperCase();
+  if(["A","B","C","D"].includes(v)) return v.charCodeAt(0) - 65;
+  const n = parseInt(v);
+  if(!isNaN(n)){
+    // dukung angka 1-4 atau 0-3
+    if(n >= 1 && n <= 4) return n-1;
+    if(n >= 0 && n <= 3) return n;
+  }
+  return -1;
+}
+
+function parseCsvQuestions(text){
+  const lines = text.split(/\r?\n/).map(l => l).filter(l => l.trim() !== "");
+  const parsed = [];
+  const errors = [];
+  lines.forEach((line, idx) => {
+    const cols = parseCsvLine(line);
+    // lewati baris header jika terdeteksi
+    if(idx === 0 && /pertanyaan|question/i.test(cols[0])) return;
+    if(cols.length < 6){
+      errors.push(`Baris ${idx+1}: kolom kurang dari 6 (pertanyaan, 4 opsi, jawaban).`);
+      return;
+    }
+    const [q, a, b, c, d, correctRaw] = cols;
+    const correctIdx = letterToIndex(correctRaw);
+    if(!q || !a || !b || !c || !d || correctIdx === -1){
+      errors.push(`Baris ${idx+1}: data tidak lengkap atau kolom jawaban tidak valid.`);
+      return;
+    }
+    parsed.push({ q, opts: [a,b,c,d], correct: correctIdx });
+  });
+  return { parsed, errors };
+}
+
+function parseJsonQuestions(text){
+  const parsed = [];
+  const errors = [];
+  let data;
+  try{
+    data = JSON.parse(text);
+  } catch(e){
+    return { parsed, errors: ["File JSON tidak valid: " + e.message] };
+  }
+  if(!Array.isArray(data)){
+    return { parsed, errors: ["File JSON harus berupa array soal."] };
+  }
+  data.forEach((item, idx) => {
+    const q = item.q || item.question || item.pertanyaan;
+    const opts = item.opts || item.options || item.opsi;
+    let correct = item.correct;
+    if(typeof correct === "string") correct = letterToIndex(correct);
+    if(!q || !Array.isArray(opts) || opts.length !== 4 || opts.some(o=>!o) || typeof correct !== "number" || correct < 0 || correct > 3){
+      errors.push(`Item ${idx+1}: format tidak sesuai (butuh q, opts[4], correct 0-3 atau A-D).`);
+      return;
+    }
+    parsed.push({ q, opts, correct });
+  });
+  return { parsed, errors };
+}
+
+function handleFileUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const text = e.target.result;
+    const isJson = file.name.toLowerCase().endsWith(".json");
+    const { parsed, errors } = isJson ? parseJsonQuestions(text) : parseCsvQuestions(text);
+
+    if(parsed.length > 0){
+      questions.push(...parsed);
+      persistQuestions();
+    }
+
+    let msg = `${parsed.length} soal berhasil ditambahkan dari file "${file.name}".`;
+    if(errors.length > 0){
+      msg += `\n\n${errors.length} baris/item gagal diproses:\n` + errors.slice(0,8).join("\n");
+      if(errors.length > 8) msg += `\n...dan ${errors.length-8} lainnya.`;
+    }
+    alert(msg);
+    event.target.value = "";
+    render();
+  };
+  reader.onerror = function(){
+    alert("Gagal membaca file. Pastikan file tidak rusak dan coba lagi.");
+  };
+  reader.readAsText(file);
+}
+
+function render(){
+  if(state.screen === "profile") return renderProfile();
+  if(state.screen === "home") return renderHome();
+  if(state.screen === "quiz") return renderQuiz();
+  if(state.screen === "result") return renderResult();
+  if(state.screen === "manage") return renderManage();
+}
+
+function renderProfile(){
+  headerTag.textContent = "Pilih Profil";
+  const list = getGuruList();
+
+  let listHtml = "";
+  if(list.length > 0){
+    listHtml = `<div class="guru-list">` + list.map(name => `
+      <div class="guru-item" onclick="chooseGuru('${name.replace(/'/g,"\\'")}')">
+        <span>${escapeHtml(name)}</span>
+        <button class="btn-danger" style="padding:5px 10px; font-size:0.78rem;" onclick="deleteGuruProfile('${name.replace(/'/g,"\\'")}', event)">Hapus</button>
+      </div>
+    `).join("") + `</div>`;
+  }
+
+  const storageWarning = !storageAvailable ? `
+    <div class="feedback show no" style="margin-bottom:18px;">
+      Penyimpanan otomatis tidak tersedia di pratinjau ini. Soal yang kamu buat tidak akan tersimpan permanen di sini — tapi setelah aplikasi ini dihosting (misalnya lewat GitHub Pages), penyimpanan akan berfungsi normal dan tiap guru bisa punya soal sendiri secara terpisah.
+    </div>
+  ` : "";
+
+  screenEl.innerHTML = `
+    <div class="home">
+      <p class="lede">Setiap guru punya bank soal masing-masing yang tersimpan otomatis di perangkat ini. Pilih profil yang sudah ada, atau buat profil baru dengan nama guru.</p>
+      ${storageWarning}
+      ${listHtml}
+      <div class="field" style="margin-top: ${list.length>0 ? '22px':'0'};">
+        <label>Nama guru (profil baru atau yang sudah ada)</label>
+        <input type="text" id="guruNameInput" placeholder="Contoh: Bu Sinta - Matematika" onkeydown="if(event.key==='Enter') selectGuruFromInput()">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="selectGuruFromInput()">Masuk / Buat Profil</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderHome(){
+  headerTag.textContent = "Uji pengetahuanmu";
+  screenEl.innerHTML = `
+    <div class="home">
+      <div class="guru-badge">
+        <span>Profil: <strong>${escapeHtml(activeGuru || "-")}</strong></span>
+        <button class="link-back" onclick="switchGuru()">Ganti profil</button>
+      </div>
+      <p class="lede">Jawab setiap pertanyaan dengan memilih satu dari empat opsi. Kamu akan langsung tahu benar atau salah setelah menjawab, lalu lihat ringkasan hasilnya di akhir.</p>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="num">${questions.length}</div>
+          <div class="label">Soal tersedia</div>
+        </div>
+        <div class="stat">
+          <div class="num">4</div>
+          <div class="label">Opsi per soal</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startQuiz()">Mulai Kuis</button>
+        <button class="btn btn-ghost" onclick="goManage()">Kelola Soal</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderQuiz(){
+  const total = state.order.length;
+  const qIdx = state.order[state.current];
+  const question = questions[qIdx];
+  const pct = Math.round(((state.current) / total) * 100);
+  const lastAnswer = state.locked ? state.answers[state.answers.length-1] : null;
+
+  headerTag.textContent = `Soal ${state.current+1} dari ${total}`;
+
+  let optionsHtml = "";
+  question.opts.forEach((opt, i) => {
+    let cls = "option";
+    if(state.locked){
+      cls += " locked";
+      if(lastAnswer && i === lastAnswer.selected){
+        cls += lastAnswer.correct ? " correct" : " wrong";
+      } else {
+        cls += " dim";
+      }
+    }
+    optionsHtml += `
+      <button class="${cls}" onclick="selectOption(${i})" ${state.locked ? "disabled":""}>
+        <span class="letter">${letterOf(i)}</span>
+        <span>${escapeHtml(opt)}</span>
+      </button>
+    `;
+  });
+
+  let feedbackHtml = "";
+  if(state.locked){
+    if(lastAnswer.correct){
+      feedbackHtml = `<div class="feedback show ok">Benar.</div>`;
+    } else {
+      feedbackHtml = `<div class="feedback show no">Kurang tepat.</div>`;
+    }
+  }
+
+  screenEl.innerHTML = `
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-num">${state.current+1}/${total}</div>
+    </div>
+    <div class="question-card">${escapeHtml(question.q)}</div>
+    <div class="options">${optionsHtml}</div>
+    ${feedbackHtml}
+    <div class="btn-row">
+      ${state.locked ? `<button class="btn btn-primary" onclick="nextQuestion()">${state.current < total-1 ? "Soal Berikutnya" : "Lihat Hasil"}</button>` : ""}
+      <button class="btn btn-ghost" onclick="goHome()">Keluar</button>
+    </div>
+  `;
+}
+
+function renderResult(){
+  const total = state.answers.length;
+  const correctCount = state.answers.filter(a => a.correct).length;
+  const pct = total ? Math.round((correctCount/total)*100) : 0;
+
+  let msg = "Terus berlatih.";
+  if(pct === 100) msg = "Sempurna, semua terjawab benar.";
+  else if(pct >= 80) msg = "Hasil yang sangat baik.";
+  else if(pct >= 60) msg = "Cukup baik, masih bisa ditingkatkan.";
+  else if(pct >= 40) msg = "Lumayan, coba lagi untuk hasil lebih baik.";
+
+  headerTag.textContent = "Hasil Kuis";
+
+  screenEl.innerHTML = `
+    <div class="score-hero">
+      <div class="big">${correctCount}<span class="of"> / ${total}</span></div>
+      <div class="score-row">
+        <div class="score-pill"><span class="label">Nilai</span><span class="value">${pct}</span></div>
+        <div class="score-pill"><span class="label">Benar</span><span class="value">${correctCount}</span></div>
+        <div class="score-pill"><span class="label">Salah</span><span class="value">${total - correctCount}</span></div>
+      </div>
+      <div class="msg">${msg}</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="startQuiz()">Ulangi Kuis</button>
+      <button class="btn btn-ghost" onclick="goHome()">Kembali ke Beranda</button>
+    </div>
+  `;
+}
+
+function renderManage(){
+  headerTag.textContent = "Kelola Soal";
+
+  let listHtml = "";
+  if(questions.length === 0){
+    listHtml = `<p class="hint">Belum ada soal. Tambahkan soal baru di bawah.</p>`;
+  } else {
+    questions.forEach((question, i) => {
+      listHtml += `
+        <div class="qlist-item">
+          <div>
+            <div class="q">${i+1}. ${escapeHtml(question.q)}</div>
+            <div class="a">Jawaban benar: ${letterOf(question.correct)}. ${escapeHtml(question.opts[question.correct])}</div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteQuestion(${i})">Hapus</button>
+        </div>
+      `;
+    });
+  }
+
+  screenEl.innerHTML = `
+    <div class="topbar">
+      <button class="link-back" onclick="goHome()">&larr; Kembali ke Beranda</button>
+      <span style="font-size:0.82rem; color: var(--text-soft);">Profil: <strong>${escapeHtml(activeGuru || "-")}</strong></span>
+    </div>
+    <div style="margin-bottom:24px;">${listHtml}</div>
+
+    <div class="upload-box">
+      <div class="upload-title">Unggah soal dari file</div>
+      <p class="hint" style="margin-top:0;">Mendukung file <strong>.json</strong> atau <strong>.csv</strong>.</p>
+      <input type="file" id="fileInput" accept=".json,.csv,.txt" onchange="handleFileUpload(event)">
+      <details style="margin-top:12px;">
+        <summary style="cursor:pointer; font-size:0.83rem; color: var(--ink-2); font-weight:600;">Lihat format yang didukung</summary>
+        <div class="format-hint">
+          <strong>CSV</strong> — satu baris per soal, kolom dipisah koma:<br>
+          <code>Pertanyaan,Opsi A,Opsi B,Opsi C,Opsi D,Jawaban</code><br>
+          Kolom jawaban bisa diisi huruf (A/B/C/D) atau angka (1-4).<br>
+          Baris pertama boleh berupa header, akan dilewati otomatis.<br><br>
+          <strong>JSON</strong> — array objek:<br>
+          <code>[{"q":"Pertanyaan?","opts":["A","B","C","D"],"correct":0}]</code><br>
+          <code>correct</code> bisa berupa angka 0-3 atau huruf "A"-"D".
+        </div>
+      </details>
+    </div>
+
+    <div class="field" style="margin-top:26px;">
+      <label>Atau tambah manual — Pertanyaan baru</label>
+      <input type="text" id="newQ" placeholder="Tuliskan pertanyaan di sini">
+    </div>
+    <div class="opt-grid">
+      <div class="field">
+        <label>Opsi A</label>
+        <input type="text" id="newOpt0" placeholder="Opsi A">
+        <div class="radio-row"><input type="radio" name="newCorrect" value="0" id="rc0"><label for="rc0" style="font-weight:400;">Jawaban benar</label></div>
+      </div>
+      <div class="field">
+        <label>Opsi B</label>
+        <input type="text" id="newOpt1" placeholder="Opsi B">
+        <div class="radio-row"><input type="radio" name="newCorrect" value="1" id="rc1"><label for="rc1" style="font-weight:400;">Jawaban benar</label></div>
+      </div>
+      <div class="field">
+        <label>Opsi C</label>
+        <input type="text" id="newOpt2" placeholder="Opsi C">
+        <div class="radio-row"><input type="radio" name="newCorrect" value="2" id="rc2"><label for="rc2" style="font-weight:400;">Jawaban benar</label></div>
+      </div>
+      <div class="field">
+        <label>Opsi D</label>
+        <input type="text" id="newOpt3" placeholder="Opsi D">
+        <div class="radio-row"><input type="radio" name="newCorrect" value="3" id="rc3"><label for="rc3" style="font-weight:400;">Jawaban benar</label></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addQuestionFromForm()">Tambah Soal</button>
+    <p class="hint">Pilih tombol radio pada opsi yang merupakan jawaban benar sebelum menekan "Tambah Soal".</p>
+  `;
+}
+
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+storageAvailable = testStorage();
+if(storageAvailable){
+  let savedActive = null;
+  try{ savedActive = localStorage.getItem(STORAGE_PREFIX + "active_guru"); } catch(e){}
+  if(savedActive && getGuruList().includes(savedActive)){
+    activeGuru = savedActive;
+    questions = loadQuestionsForGuru(savedActive);
+    state.screen = "home";
+  }
+}
+render();
+</script>
+</body>
+</html>
